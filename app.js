@@ -36,8 +36,7 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 
 var io = require('socket.io').listen(server);
 io.sockets.on('connection', function(socket) {
-
-  // player enter
+  // comment
   socket.on('comment', function(data) {
     socket.emit('comment', data);
     socket.broadcast.emit('comment', data);

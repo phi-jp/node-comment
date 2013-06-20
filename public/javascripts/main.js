@@ -4,9 +4,21 @@
     var SCREEN_HEIGHT   = 465;
     var SCREEN_CENTER_X = SCREEN_WIDTH/2;
     var SCREEN_CENTER_Y = SCREEN_HEIGHT/2;
+    var COLOR_LIST = [
+        "#1abc9c",
+        "#2ecc71",
+        "#3498db",
+        "#9b59b6",
+        "#e74c3c",
+        "#f1c40f",
+    ];
+    var ASCII_UNCO = [
+        "   人\n",
+        "  (__)\n",
+        " (_____)\n",
+        "(________)\n"].join('');
 
     var socket = io.connect(location.origin);
-    var userId = null;
 
     tm.main(function() {
         var app = tm.app.CanvasApp("#world");
@@ -17,29 +29,41 @@
 
         app.run();
         
+        // setup ui
+        setupUI();
+    });
+    
+    var setupUI = function() {
         var inputText = tm.dom.Element("#inputText");
         var sendBtn   = tm.dom.Element("#sendBtn");
+        var colorPicker= tm.dom.Element("#colorPicker");
+        var buttonList = tm.dom.ElementList("#buttonList button");
         
         inputText.event.add("keydown", function(e) {
             if (e.keyCode == 13) {
-                sendComment();
+                sendComment(inputText.value, colorPicker.value);
             }
         });
         
         sendBtn.event.click(function() {
-            sendComment();
+            sendComment(inputText.value, colorPicker.value);
         });
-    });
+        
+        colorPicker.value = COLOR_LIST.pickup();
+        
+        buttonList.each(function(elm) {
+            elm.event.click(function() {
+                sendComment(elm.text, colorPicker.value);
+            })
+        })
+    };
     
-    var sendComment = function() {
-        var inputText = tm.dom.Element("#inputText");
-        var colorPicker= tm.dom.Element("#colorPicker");
+    var sendComment = function(text, color) {
         socket.emit("comment", {
-            text: inputText.value,
-            color: colorPicker.value,
+            text: text,
+            color: color,
         });
-
-    }
+    };
 
     tm.define("MainScene", {
         superClass: "tm.app.Scene",
@@ -58,12 +82,18 @@
                 color: "black",
             });
         },
-
+        
         update: function(app) {
         },
         
         comment: function(data) {
-            var label = DownUpCommentLabel(data).addChildTo(this);
+            var label = null;
+            if (/(ドン|どん)/.test(data.text)) {
+                label = DonCommentLabel(data).addChildTo(this);
+            }
+            else {
+                label = DownUpCommentLabel(data).addChildTo(this);
+            }
         },
     });
     
@@ -98,7 +128,27 @@
         },
     });
     
-    global.socket = socket;
+    tm.define("DonCommentLabel", {
+        superClass: "CommentLabel",
+        
+        init: function(param) {
+            this.superInit(param);
+            
+            var self = this;
+            
+            this.x = tm.util.Random.randint(0, SCREEN_WIDTH);
+            this.y = tm.util.Random.randint(0, SCREEN_HEIGHT);
+            
+            this.fontWeight = "bold";
+            this.fontSize=128;
+            this.align = "center";
+            this.baseline = "middle";
+            
+            this.tweener.fadeOut().call(function() {
+                self.remove();
+            });
+        },
+    });
 
 })(this);
 
