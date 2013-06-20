@@ -1,0 +1,14 @@
+<html>
+<head>
+<title>jshtml</title>
+</head>
+
+<body>
+
+<h1>@locals.title</h1>
+<p>
+@locals.message
+</p>
+
+</body>
+</html>
