@@ -35,22 +35,12 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 });
 
 var io = require('socket.io').listen(server);
-var userId = 0;
 io.sockets.on('connection', function(socket) {
-  socket.handshake.userId = userId;
-  userId++;
-
-  socket.emit("connected", { userId: socket.handshake.userId });
 
   // player enter
-  socket.on('player create', function(data) {
-  	data.userId = socket.handshake.userId;
-    socket.broadcast.emit('player create', data);
-  });
-  // player update
-  socket.on('player update', function(data) {
-  	data.userId = socket.handshake.userId;
-    socket.broadcast.emit('player update', data);
+  socket.on('comment', function(data) {
+    socket.emit('comment', data);
+    socket.broadcast.emit('comment', data);
   });
 });
 

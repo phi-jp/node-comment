@@ -1,105 +1,115 @@
 
-;(function() {
-	var SCREEN_WIDTH    = 680;
-	var SCREEN_HEIGHT   = 960;
-	var SCREEN_CENTER_X = SCREEN_WIDTH/2;
-	var SCREEN_CENTER_Y = SCREEN_HEIGHT/2;
+;(function(global) {
+    var SCREEN_WIDTH    = 465;
+    var SCREEN_HEIGHT   = 465;
+    var SCREEN_CENTER_X = SCREEN_WIDTH/2;
+    var SCREEN_CENTER_Y = SCREEN_HEIGHT/2;
 
-	var socket = io.connect(location.origin);
-	var userId = null;
+    var socket = io.connect(location.origin);
+    var userId = null;
 
-	socket.on('connected', function(e) {
-		userId = e.userId;
-		console.log(userId);
-	});
+    tm.main(function() {
+        var app = tm.app.CanvasApp("#world");
+        app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);
+        app.background = "hsla(220, 80%, 98%, 1)";
 
-	tm.main(function() {
-		var app = tm.app.CanvasApp("#world");
-		app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);
-		app.fitWindow();
-		app.background = "hsla(220, 80%, 98%, 1)";
+        app.replaceScene(MainScene());
 
-		app.replaceScene(MainScene());
+        app.run();
+        
+        var inputText = tm.dom.Element("#inputText");
+        var sendBtn   = tm.dom.Element("#sendBtn");
+        
+        inputText.event.add("keydown", function(e) {
+            if (e.keyCode == 13) {
+                sendComment();
+            }
+        });
+        
+        sendBtn.event.click(function() {
+            sendComment();
+        });
+    });
+    
+    var sendComment = function() {
+        var inputText = tm.dom.Element("#inputText");
+        var colorPicker= tm.dom.Element("#colorPicker");
+        socket.emit("comment", {
+            text: inputText.value,
+            color: colorPicker.value,
+        });
 
-		app.run();
-	});
+    }
 
-	tm.define("MainScene", {
-		superClass: "tm.app.Scene",
+    tm.define("MainScene", {
+        superClass: "tm.app.Scene",
 
-		init: function() {
-			this.superInit();
+        init: function() {
+            this.superInit();
+            
+            var self = this;
 
-			this.player = Player().addChildTo(this);
-			this.player.x = SCREEN_CENTER_X;
-			this.player.y = SCREEN_CENTER_Y;
+            socket.on("comment", function(e) {
+                self.comment(e);
+            });
+            
+            this.comment({
+                text: "コメントしてね♪",
+                color: "black",
+            });
+        },
 
-			var self = this;
-			this.others = {};
+        update: function(app) {
+        },
+        
+        comment: function(data) {
+            var label = DownUpCommentLabel(data).addChildTo(this);
+        },
+    });
+    
+    tm.define("CommentLabel", {
+        superClass: "tm.app.Label",
+        
+        init: function(param) {
+            this.superInit();
+            
+            this.text = param.text;
+            this.fillStyle = param.color;
+            this.shadowBlur = 2;
+            this.shadowColor = "#222";
+        },
+    });
+    
+    tm.define("DownUpCommentLabel", {
+        superClass: "CommentLabel",
+        
+        init: function(param) {
+            this.superInit(param);
+            
+            var self = this;
+            
+            this.x = tm.util.Random.randint(0, SCREEN_WIDTH);
+            this.y = SCREEN_HEIGHT;
+            
+            this.align = "center";
+            this.tweener.move(this.x, 0, 6 * 1000).call(function() {
+                self.remove();
+            });
+        },
+    });
+    
+    global.socket = socket;
 
-			socket.on("player create", function(e) {
-				var player = Player().addChildTo(self);
-				self.others[e.userId] = player;
-				player.x = e.x;
-				player.y = e.y;
-			});
-			socket.on("player update", function(e) {
-				var player = self.others[e.userId];
-				player.x = e.x;
-				player.y = e.y;
-			});
-		},
+})(this);
 
-		update: function(app) {
-			var p = app.pointing;
 
-			if (p.getPointing()) {
-				this.player.x += p.deltaPosition.x;
-				this.player.y += p.deltaPosition.y;
-			}
-			// if (p.getPointingStart()) {
-			// 	var v = tm.geom.Vector2.sub(p.position, this.player.position);
-			// 	v.normalize();
-			// 	var bullet = Bullet(v).addChildTo(this);
-			// 	bullet.x = this.player.x;
-			// 	bullet.y = this.player.y;
-			// }
-		}
-	});
 
-	tm.define("Player", {
-		superClass: "tm.app.CircleShape",
 
-		init: function() {
-			this.superInit();
-			socket.emit("player create", {
-				x: SCREEN_CENTER_X,
-				y: SCREEN_CENTER_Y,
-			});
-		},
 
-		update: function(app) {
-			if (app.frame % 30 == 0) {
-				socket.emit("player update", {
-					x: this.x,
-					y: this.y,
-				});
-			}
-		},
-	});
 
-	tm.define("Bullet", {
-		superClass: "tm.app.CircleShape",
 
-		init: function(v) {
-			this.superInit(16, 16);
-			this.v = v;
-			this.v.mul(16);
-		},
 
-		update: function() {
-			this.position.add(this.v);
-		}
-	});
 
-})();
+
+
+

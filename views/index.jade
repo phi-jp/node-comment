@@ -1,4 +1,12 @@
 extends layout
 
 block content
-  canvas#world
+  div.content
+    div
+      canvas#world
+    br 
+    div.input-append
+      input#inputText.span5(type="text", value="Hello, Node.js")
+      button#sendBtn.btn(type="button") Send
+    div
+      input#colorPicker(type="color", value="#aafaff")
