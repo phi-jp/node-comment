@@ -58,7 +58,7 @@
                 if (!value) value = elm.text;
                 sendComment(value, colorPicker.value);
             })
-        })
+        });
     };
     
     var sendComment = function(text, color) {
@@ -117,12 +117,22 @@
         init: function(path) {
             this.superInit(path);
             
+            var MAX_WIDTH = 256;
+            var MAX_HEIGHT = 256;
+            
+            if (this.width >= this.height && this.image.width > MAX_WIDTH) {
+                this.scaleX = this.scaleY = MAX_WIDTH/this.image.width;
+            }
+            else if (this.image.height > MAX_HEIGHT) {
+                this.scaleX = this.scaleY = MAX_HEIGHT/this.image.height;
+            }
+
+            
             this.x = tm.util.Random.randint(0, SCREEN_WIDTH);
-            this.y = SCREEN_HEIGHT;
+            this.y = SCREEN_HEIGHT + this.height/2;
             
             var self = this;
-            
-            this.tweener.move(this.x, 0, 6 * 1000).call(function() {
+            this.tweener.move(this.x, -this.height/2, 6 * 1000).call(function() {
                 self.remove();
             });
         },
