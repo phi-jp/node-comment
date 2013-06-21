@@ -17,6 +17,7 @@
         "  (__)\n",
         " (_____)\n",
         "(________)\n"].join('');
+    var KENKYO = "https://si0.twimg.com/profile_images/484079620/kenkyo_bigger.jpg";
 
     var socket = io.connect(location.origin);
 
@@ -53,7 +54,9 @@
         
         buttonList.each(function(elm) {
             elm.event.click(function() {
-                sendComment(elm.text, colorPicker.value);
+                var value = elm.attr.get("data-value");
+                if (!value) value = elm.text;
+                sendComment(value, colorPicker.value);
             })
         })
     };
@@ -87,13 +90,41 @@
         },
         
         comment: function(data) {
-            var label = null;
-            if (/(ドン|どん)/.test(data.text)) {
-                label = DonCommentLabel(data).addChildTo(this);
+            var self = this;
+            if (/\.(jpg|jpeg|gif|png)/.test(data.text)) {
+                var path = data.text;
+                var asset = tm.asset.AssetManager.load(path);
+                tm.asset.AssetManager.onload = function() {
+                    var sprite = CommentSprite(path).addChildTo(self);
+                };
             }
             else {
-                label = DownUpCommentLabel(data).addChildTo(this);
+                var label = null;
+                if (/(ドン|どん)/.test(data.text)) {
+                    label = DonCommentLabel(data);
+                }
+                else {
+                    label = DownUpCommentLabel(data);
+                }
+                this.addChild(label);
             }
+        },
+    });
+    
+    tm.define("CommentSprite", {
+        superClass: "tm.app.Sprite",
+        
+        init: function(path) {
+            this.superInit(path);
+            
+            this.x = tm.util.Random.randint(0, SCREEN_WIDTH);
+            this.y = SCREEN_HEIGHT;
+            
+            var self = this;
+            
+            this.tweener.move(this.x, 0, 6 * 1000).call(function() {
+                self.remove();
+            });
         },
     });
     
