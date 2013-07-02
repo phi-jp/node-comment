@@ -19,7 +19,6 @@
         "(________)\n"].join('');
     var KENKYO = "https://si0.twimg.com/profile_images/484079620/kenkyo_bigger.jpg";
 
-
     var socket = io.connect(location.origin);
 
     tm.main(function() {
